@@ -28,8 +28,21 @@ const newUser = async (req, res) => {
   return res.status(200).send({ token: token, user: _.pick(user, ["email"]) });
 };
 
+const authUser = async (req, res) => {
+  let user = await User.findOne({ email: req.body.email });
+  if (!user) {
+    return res.status(400).send("Invalid email or password");
+  }
+  const validUser = await bcrypt.compare(req.body.password, user.password);
+  if (!validUser) {
+    return res.status(400).send("Invalid email or password");
+  }
+  const token = user.generateToken();
+  return res.status(200).send({ token: token, user: _.pick(user, ["email"]) });
+};
+
 router.route("/").post(newUser);
 
-router.route("/auth").post();
+router.route("/auth").post(authUser);
 
 module.exports = router;
